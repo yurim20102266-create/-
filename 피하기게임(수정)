@@ -1,0 +1,1186 @@
+index.html
+
+<!doctype html>
+<html lang="ko" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
+  <meta
+    name="description"
+    content="빨간 장애물을 피해 30초 동안 살아남으세요. 방향키 또는 A·D로 즐기는 브라우저 게임."
+  >
+
+  <title>AVOID / 30 — 30초 피하기</title>
+
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101721'/%3E%3Crect x='5' y='19' width='9' height='9' rx='2' fill='%2379ebc5'/%3E%3Crect x='20' y='4' width='7' height='7' rx='2' fill='%23ff6868'/%3E%3C/svg%3E"
+  >
+
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+
+<body>
+  <main>
+    <header>
+      <a href="./" class="logo">
+        AVOID <span>/ 30</span>
+      </a>
+
+      <span class="edition">A LITTLE SURVIVAL GAME</span>
+
+      <button id="effectBtn" aria-pressed="true">
+        효과 ON
+      </button>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <span class="eyebrow">SURVIVE THE DROP</span>
+
+        <h1>
+          피하고.<br>
+          버티고.<br>
+          <em>30초.</em>
+        </h1>
+
+        <p class="intro">
+          빨간 장애물이 쏟아집니다.<br>
+          초록 플레이어를 움직여 끝까지 살아남으세요.
+        </p>
+
+        <div class="rule">
+          <span class="swatch player-swatch"></span>
+
+          <div>
+            <strong>당신의 플레이어</strong>
+            <p>← → 또는 A · D로 좌우 이동</p>
+          </div>
+        </div>
+
+        <div class="rule">
+          <span class="swatch danger-swatch"></span>
+
+          <div>
+            <strong>빨간 장애물</strong>
+            <p>닿으면 실패, 30초 버티면 성공</p>
+          </div>
+        </div>
+
+        <div class="best">
+          <span>PERSONAL BEST</span>
+          <strong id="best">0.0 <small>초</small></strong>
+          <p>이 브라우저에 최고 기록을 저장합니다.</p>
+        </div>
+      </aside>
+
+      <section
+        class="play-panel"
+        aria-label="30초 장애물 피하기"
+      >
+        <div class="hud">
+          <span id="stateLabel">READY</span>
+          <strong id="timeDisplay">
+            30.0 <small>SEC</small>
+          </strong>
+        </div>
+
+        <div class="progress">
+          <div id="progress"></div>
+        </div>
+
+        <div id="viewport">
+          <div id="scaled">
+            <div id="game">
+              <div class="guide-line"></div>
+              <div id="player" aria-label="플레이어"></div>
+            </div>
+          </div>
+
+          <div id="overlay">
+            <span id="overlayEyebrow">
+              READY WHEN YOU ARE
+            </span>
+
+            <h2 id="overlayTitle">준비됐나요?</h2>
+
+            <p id="overlayText">
+              좌우로 움직이며 30초 동안 피하세요.
+            </p>
+
+            <button id="startBtn" class="primary">
+              게임 시작 <span>▶</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <p id="status" role="status">
+            시작 버튼을 눌러 도전하세요.
+          </p>
+
+          <button id="pauseBtn" disabled>
+            일시정지
+          </button>
+        </div>
+
+        <div class="bottom-controls">
+          <button
+            id="leftBtn"
+            aria-label="왼쪽으로 이동"
+          >
+            ← <span>A</span>
+          </button>
+
+          <span>
+            <kbd>R</kbd> 다시 시작
+            <i>·</i>
+            <kbd>P</kbd> 일시정지
+          </span>
+
+          <button
+            id="rightBtn"
+            aria-label="오른쪽으로 이동"
+          >
+            <span>D</span> →
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <span>한 번 더, 조금 더 오래.</span>
+
+      <span id="storageNotice">
+        창을 벗어나면 자동으로 일시정지됩니다.
+      </span>
+    </footer>
+  </main>
+</body>
+</html>
+          style.css
+
+:root {
+  color-scheme: dark;
+  --bg: #10151d;
+  --muted: #9ba8b8;
+  --line: #2e3946;
+  --mint: #79ebc5;
+  --red: #ff6868;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #eef3f7;
+  font: 16px/1.6 Arial, "Noto Sans KR", sans-serif;
+}
+
+main {
+  max-width: 1180px;
+  margin: auto;
+  padding: 0 36px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--line);
+  background: #202b38;
+  border-radius: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:hover {
+  border-color: var(--mint);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 4px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+header {
+  height: 100px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  color: inherit;
+  text-decoration: none;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: var(--mint);
+}
+
+.edition,
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+#effectBtn {
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 602px);
+  gap: 70px;
+  padding: 42px 0;
+}
+
+aside {
+  padding-top: 8px;
+}
+
+h1 {
+  font-size: 64px;
+  line-height: 1.16;
+  letter-spacing: -3px;
+  margin: 20px 0 26px;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--mint);
+}
+
+.intro {
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.rule {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.rule strong {
+  font-size: 14px;
+}
+
+.rule p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.player-swatch {
+  background: var(--mint);
+}
+
+.danger-swatch {
+  background: var(--red);
+}
+
+.best {
+  margin-top: 20px;
+}
+
+.best > span {
+  color: var(--muted);
+  font: 12px monospace;
+  letter-spacing: 1px;
+}
+
+.best strong {
+  display: block;
+  font: bold 32px monospace;
+  margin: 5px 0;
+}
+
+.best small {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.best p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.play-panel {
+  border: 1px solid #3d4b5d;
+  border-radius: 14px;
+  background: #16202c;
+  overflow: hidden;
+  align-self: start;
+  box-shadow: 0 20px 70px #0003;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+}
+
+.hud > span {
+  font: 13px monospace;
+  letter-spacing: 1.5px;
+  color: var(--mint);
+}
+
+.hud strong {
+  font: bold 27px monospace;
+}
+
+.hud small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.progress {
+  height: 3px;
+  background: #2b3946;
+}
+
+.progress div {
+  background: var(--mint);
+  height: 100%;
+  width: 0;
+}
+
+#viewport {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+}
+
+#scaled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 400px;
+  transform-origin: top left;
+}
+
+#game {
+  width: 600px;
+  height: 400px;
+  position: relative;
+  overflow: hidden;
+  background-color: #111923;
+  background-image:
+    linear-gradient(#ffffff04 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff04 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+#player {
+  position: absolute;
+  left: 280px;
+  top: 340px;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
+  background: var(--mint);
+  border: 2px solid #b9ffe7;
+  box-shadow: 0 0 25px #79ebc522;
+  z-index: 2;
+}
+
+.obstacle {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--red);
+  border: 2px solid #ffa0a0;
+}
+
+.guide-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 386px;
+  border-top: 1px dashed #79ebc52b;
+}
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  background: #101923e8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 20px;
+  z-index: 3;
+}
+
+#overlay[hidden] {
+  display: none;
+}
+
+#overlay > span {
+  font: 12px monospace;
+  letter-spacing: 2px;
+  color: var(--mint);
+}
+
+#overlay h2 {
+  font-size: 28px;
+  letter-spacing: -1px;
+  margin: 18px 0 6px;
+}
+
+#overlay p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.primary {
+  background: var(--mint);
+  color: #10251e;
+  font-weight: 700;
+  min-width: 230px;
+  padding: 13px 20px;
+  margin-top: 25px;
+  border: 0;
+}
+
+.primary span {
+  margin-left: 55px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  min-height: 69px;
+}
+
+.toolbar p {
+  font-size: 14px;
+  margin: 0;
+  color: #c9d3dc;
+}
+
+.toolbar button {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.bottom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.bottom-controls > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bottom-controls button {
+  min-width: 72px;
+}
+
+.bottom-controls button span {
+  font: 12px monospace;
+  color: var(--muted);
+  margin: 0 5px;
+}
+
+kbd {
+  font: 12px monospace;
+  color: #e3ebf2;
+}
+
+i {
+  font-style: normal;
+  padding: 0 6px;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 950px) {
+  .layout {
+    gap: 28px;
+    grid-template-columns: 230px minmax(0, 602px);
+  }
+
+  h1 {
+    font-size: 54px;
+  }
+}
+
+@media (max-width: 700px) {
+  main {
+    padding: 0 16px;
+  }
+
+  header {
+    height: 76px;
+  }
+
+  .edition {
+    display: none;
+  }
+
+  .logo {
+    font-size: 24px;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px 0;
+  }
+
+  h1 {
+    font-size: 34px;
+    margin: 8px 0;
+    letter-spacing: -1px;
+  }
+
+  h1 br {
+    display: none;
+  }
+
+  .intro {
+    margin: 10px 0;
+    font-size: 14px;
+  }
+
+  .rule,
+  .best {
+    display: none;
+  }
+
+  .play-panel {
+    width: 100%;
+  }
+
+  .bottom-controls {
+    padding: 10px;
+  }
+
+  .bottom-controls > span {
+    font-size: 11px;
+  }
+
+  .bottom-controls button {
+    min-width: 55px;
+    padding: 8px;
+  }
+
+  footer {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  #overlay h2 {
+    font-size: 24px;
+  }
+
+  .primary {
+    margin-top: 18px;
+  }
+
+  .toolbar {
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .toolbar p {
+    font-size: 13px;
+  }
+}
+          game.js
+
+"use strict";
+
+(() => {
+  const player = document.getElementById("player");
+  const game = document.getElementById("game");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const status = document.getElementById("status");
+  const effectBtn = document.getElementById("effectBtn");
+
+  const $ = (id) => document.getElementById(id);
+
+  let effectEnabled = !matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  let playerX = 280;
+  let obstacles = [];
+
+  let gameRunning = false;
+  let paused = false;
+
+  let gameStartTime = 0;
+  let pausedTime = 0;
+  let pauseStartedAt = 0;
+
+  let gameTimer = null;
+  let spawnTimer = null;
+  let moveTimer = null;
+  let effectTimers = [];
+
+  const GAME_TIME = 30000;
+  const SPAWN_INTERVAL = 900;
+  const BEST_TIME_KEY = "avoid30_best_time";
+
+  let bestTime = loadBestTime();
+
+  function loadBestTime() {
+    try {
+      const saved = localStorage.getItem(BEST_TIME_KEY);
+
+      if (saved === null) {
+        return 0;
+      }
+
+      const value = Number(saved);
+
+      if (
+        !Number.isFinite(value) ||
+        value < 0 ||
+        value > GAME_TIME / 1000
+      ) {
+        return 0;
+      }
+
+      return value;
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBestTime(time) {
+    if (time > bestTime) {
+      bestTime = time;
+
+      try {
+        localStorage.setItem(
+          BEST_TIME_KEY,
+          String(bestTime)
+        );
+      } catch {
+        $("storageNotice").textContent =
+          "저장 공간을 사용할 수 없어 이번 방문 동안만 기록됩니다.";
+      }
+    }
+
+    $("best").textContent = bestTime.toFixed(1) + " 초";
+  }
+
+  function clearTimers() {
+    clearInterval(gameTimer);
+    clearInterval(spawnTimer);
+    clearInterval(moveTimer);
+  }
+
+  function stopEffect() {
+    effectTimers.forEach(clearTimeout);
+    effectTimers = [];
+
+    game.style.transform = "translateX(0)";
+  }
+
+  function updateEffect() {
+    effectBtn.textContent = effectEnabled
+      ? "효과 ON"
+      : "효과 OFF";
+
+    effectBtn.setAttribute(
+      "aria-pressed",
+      String(effectEnabled)
+    );
+
+    if (!effectEnabled) {
+      stopEffect();
+    }
+  }
+
+  startBtn.addEventListener("click", () => {
+    if (paused) {
+      togglePause();
+    } else {
+      startGame();
+    }
+  });
+
+  pauseBtn.addEventListener("click", togglePause);
+
+  effectBtn.addEventListener("click", () => {
+    effectEnabled = !effectEnabled;
+    updateEffect();
+  });
+
+  function movePlayer(direction) {
+    if (!gameRunning || paused) {
+      return;
+    }
+
+    playerX = Math.max(
+      0,
+      Math.min(560, playerX + direction * 25)
+    );
+
+    player.style.left = playerX + "px";
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (
+      ["INPUT", "TEXTAREA", "SELECT"].includes(
+        event.target.tagName
+      ) ||
+      event.target.isContentEditable
+    ) {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+
+    if (
+      ![
+        "r",
+        "p",
+        "a",
+        "d",
+        "arrowleft",
+        "arrowright"
+      ].includes(key)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (key === "r") {
+      if (!event.repeat) {
+        startGame();
+      }
+
+      return;
+    }
+
+    if (key === "p") {
+      if (!event.repeat) {
+        togglePause();
+      }
+
+      return;
+    }
+
+    if (key === "arrowleft" || key === "a") {
+      movePlayer(-1);
+    }
+
+    if (key === "arrowright" || key === "d") {
+      movePlayer(1);
+    }
+  });
+
+  $("leftBtn").addEventListener("click", () => {
+    movePlayer(-1);
+  });
+
+  $("rightBtn").addEventListener("click", () => {
+    movePlayer(1);
+  });
+
+  function startGame() {
+    clearTimers();
+    stopEffect();
+
+    obstacles.forEach((obstacle) => {
+      obstacle.element.remove();
+    });
+
+    obstacles = [];
+
+    playerX = 280;
+    player.style.left = playerX + "px";
+
+    gameRunning = true;
+    paused = false;
+
+    gameStartTime = performance.now();
+    pausedTime = 0;
+    pauseStartedAt = 0;
+
+    pauseBtn.textContent = "일시정지";
+    pauseBtn.disabled = false;
+
+    status.textContent =
+      "게임 중! 빨간 장애물을 피하세요!";
+
+    $("stateLabel").textContent = "PLAYING";
+    $("overlay").hidden = true;
+    $("timeDisplay").textContent = "30.0 SEC";
+    $("progress").style.width = "0%";
+
+    spawnTimer = setInterval(
+      createObstacle,
+      SPAWN_INTERVAL
+    );
+
+    moveTimer = setInterval(moveObstacles, 20);
+    gameTimer = setInterval(updateTime, 100);
+  }
+
+  function elapsedTime() {
+    return Math.max(
+      0,
+      (paused ? pauseStartedAt : performance.now()) -
+        gameStartTime -
+        pausedTime
+    );
+  }
+
+  function updateTime() {
+    if (!gameRunning || paused) {
+      return;
+    }
+
+    const elapsed = elapsedTime();
+
+    status.textContent =
+      "남은 시간: " +
+      Math.max(
+        0,
+        Math.ceil((GAME_TIME - elapsed) / 1000)
+      ) +
+      "초";
+
+    $("timeDisplay").textContent =
+      Math.max(
+        0,
+        (GAME_TIME - elapsed) / 1000
+      ).toFixed(1) + " SEC";
+
+    $("progress").style.width =
+      Math.min(
+        100,
+        (elapsed / GAME_TIME) * 100
+      ) + "%";
+
+    if (elapsed >= GAME_TIME) {
+      winGame();
+    }
+  }
+
+  function togglePause() {
+    if (!gameRunning) {
+      return;
+    }
+
+    if (!paused) {
+      if (elapsedTime() >= GAME_TIME) {
+        winGame();
+        return;
+      }
+
+      paused = true;
+      pauseStartedAt = performance.now();
+
+      pauseBtn.textContent = "계속하기";
+      status.textContent = "⏸ 일시정지 중";
+      $("stateLabel").textContent = "PAUSED";
+
+      showOverlay(
+        "잠깐, 숨 고르기",
+        "준비되면 멈춘 자리에서 이어가세요.",
+        "계속하기 ▶"
+      );
+    } else {
+      pausedTime +=
+        performance.now() - pauseStartedAt;
+
+      paused = false;
+
+      pauseBtn.textContent = "일시정지";
+      status.textContent = "게임 계속!";
+      $("stateLabel").textContent = "PLAYING";
+      $("overlay").hidden = true;
+    }
+  }
+
+  function createObstacle() {
+    if (!gameRunning || paused) {
+      return;
+    }
+
+    const obstacle = document.createElement("div");
+
+    obstacle.className = "obstacle";
+
+    const x = Math.floor(Math.random() * 560);
+
+    obstacle.style.left = x + "px";
+    obstacle.style.top = "0px";
+
+    game.appendChild(obstacle);
+
+    obstacles.push({
+      element: obstacle,
+      x: x,
+      y: 0
+    });
+  }
+
+  function moveObstacles() {
+    if (!gameRunning || paused) {
+      return;
+    }
+
+    if (elapsedTime() >= GAME_TIME) {
+      winGame();
+      return;
+    }
+
+    for (
+      let i = obstacles.length - 1;
+      i >= 0;
+      i--
+    ) {
+      const obstacle = obstacles[i];
+
+      obstacle.y += 4;
+
+      obstacle.element.style.top =
+        obstacle.y + "px";
+
+      if (checkCollision(obstacle)) {
+        loseGame();
+        return;
+      }
+
+      if (obstacle.y > 400) {
+        obstacle.element.remove();
+        obstacles.splice(i, 1);
+      }
+    }
+  }
+
+  function checkCollision(obstacle) {
+    return (
+      playerX < obstacle.x + 40 &&
+      playerX + 40 > obstacle.x &&
+      340 < obstacle.y + 40 &&
+      380 > obstacle.y
+    );
+  }
+
+  function showOverlay(title, text, button) {
+    $("overlayTitle").textContent = title;
+    $("overlayText").textContent = text;
+
+    $("overlayEyebrow").textContent =
+      $("stateLabel").textContent;
+
+    startBtn.textContent = button;
+    $("overlay").hidden = false;
+  }
+
+  function finish(won) {
+    if (!gameRunning) {
+      return;
+    }
+
+    const survivalTime = won
+      ? 30
+      : Math.min(30, elapsedTime() / 1000);
+
+    saveBestTime(survivalTime);
+
+    gameRunning = false;
+    paused = false;
+
+    clearTimers();
+
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = "일시정지";
+
+    $("stateLabel").textContent = won
+      ? "CLEAR"
+      : "GAME OVER";
+
+    $("timeDisplay").textContent =
+      (30 - survivalTime).toFixed(1) + " SEC";
+
+    $("progress").style.width =
+      (survivalTime / 30) * 100 + "%";
+
+    status.textContent =
+      (
+        won
+          ? "🎉 성공! 30초 생존!"
+          : "💥 실패! " +
+            survivalTime.toFixed(1) +
+            "초 생존!"
+      ) + " / R로 다시 시작";
+
+    showOverlay(
+      won
+        ? "30초, 끝까지 살아남았다!"
+        : "다시 한 번 피해볼까요?",
+
+      survivalTime.toFixed(1) +
+        "초 생존 · 최고 기록 " +
+        bestTime.toFixed(1) +
+        "초",
+
+      "다시 시작 ↻"
+    );
+
+    if (!won && effectEnabled) {
+      game.style.transform = "translateX(-15px)";
+
+      [15, -15, 15, 0].forEach((x, i) => {
+        const timer = setTimeout(() => {
+          game.style.transform =
+            "translateX(" + x + "px)";
+        }, (i + 1) * 60);
+
+        effectTimers.push(timer);
+      });
+    }
+  }
+
+  function winGame() {
+    finish(true);
+  }
+
+  function loseGame() {
+    finish(false);
+  }
+
+  window.addEventListener("blur", () => {
+    if (gameRunning && !paused) {
+      togglePause();
+    }
+  });
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (
+        document.hidden &&
+        gameRunning &&
+        !paused
+      ) {
+        togglePause();
+      }
+    }
+  );
+
+  function resizeGame() {
+    const scale = $("viewport").clientWidth / 600;
+
+    $("scaled").style.transform =
+      "scale(" + scale + ")";
+
+    $("viewport").style.height =
+      400 * scale + "px";
+  }
+
+  window.addEventListener("resize", resizeGame);
+
+  resizeGame();
+  updateEffect();
+
+  $("best").textContent =
+    bestTime.toFixed(1) + " 초";
+
+  if (document.modelContext?.registerTool) {
+    try {
+      Promise.resolve(
+        document.modelContext.registerTool({
+          name: "read_avoid_game",
+
+          description:
+            "Read the current survival game state and best time.",
+
+          inputSchema: {
+            type: "object",
+            properties: {},
+            additionalProperties: false
+          },
+
+          annotations: {
+            readOnlyHint: true
+          },
+
+          execute: (input) => {
+            if (
+              !input ||
+              typeof input !== "object" ||
+              Array.isArray(input) ||
+              Object.keys(input).length
+            ) {
+              throw Error("Expected an empty object");
+            }
+
+            return {
+              gameRunning,
+              paused,
+              playerX,
+              bestTime
+            };
+          }
+        })
+      ).catch(() => {});
+    } catch {}
+  }
+})();
