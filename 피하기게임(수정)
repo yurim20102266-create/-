@@ -4,8 +4,14 @@ index.html
 <html lang="ko" translate="no">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
   <meta name="google" content="notranslate">
+
   <meta
     name="description"
     content="빨간 장애물을 피해 30초 동안 살아남으세요. 방향키 또는 A·D로 즐기는 브라우저 게임."
@@ -29,7 +35,9 @@ index.html
         AVOID <span>/ 30</span>
       </a>
 
-      <span class="edition">A LITTLE SURVIVAL GAME</span>
+      <span class="edition">
+        A LITTLE SURVIVAL GAME
+      </span>
 
       <button id="effectBtn" aria-pressed="true">
         효과 ON
@@ -38,7 +46,9 @@ index.html
 
     <div class="layout">
       <aside>
-        <span class="eyebrow">SURVIVE THE DROP</span>
+        <span class="eyebrow">
+          SURVIVE THE DROP
+        </span>
 
         <h1>
           피하고.<br>
@@ -71,8 +81,14 @@ index.html
 
         <div class="best">
           <span>PERSONAL BEST</span>
-          <strong id="best">0.0 <small>초</small></strong>
-          <p>이 브라우저에 최고 기록을 저장합니다.</p>
+
+          <strong id="best">
+            0.0 <small>초</small>
+          </strong>
+
+          <p>
+            이 브라우저에 최고 기록을 저장합니다.
+          </p>
         </div>
       </aside>
 
@@ -82,6 +98,7 @@ index.html
       >
         <div class="hud">
           <span id="stateLabel">READY</span>
+
           <strong id="timeDisplay">
             30.0 <small>SEC</small>
           </strong>
@@ -95,7 +112,11 @@ index.html
           <div id="scaled">
             <div id="game">
               <div class="guide-line"></div>
-              <div id="player" aria-label="플레이어"></div>
+
+              <div
+                id="player"
+                aria-label="플레이어"
+              ></div>
             </div>
           </div>
 
@@ -104,7 +125,9 @@ index.html
               READY WHEN YOU ARE
             </span>
 
-            <h2 id="overlayTitle">준비됐나요?</h2>
+            <h2 id="overlayTitle">
+              준비됐나요?
+            </h2>
 
             <p id="overlayText">
               좌우로 움직이며 30초 동안 피하세요.
@@ -160,7 +183,7 @@ index.html
   </main>
 </body>
 </html>
-          style.css
+style.css
 
 :root {
   color-scheme: dark;
@@ -173,6 +196,10 @@ index.html
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
 }
 
 body {
@@ -642,7 +669,7 @@ footer {
     font-size: 13px;
   }
 }
-          game.js
+game.js
 
 "use strict";
 
@@ -673,7 +700,7 @@ footer {
   let gameTimer = null;
   let spawnTimer = null;
   let moveTimer = null;
-  let effectTimers = [];
+  let screenShake = null;
 
   const GAME_TIME = 30000;
   const SPAWN_INTERVAL = 900;
@@ -720,7 +747,8 @@ footer {
       }
     }
 
-    $("best").textContent = bestTime.toFixed(1) + " 초";
+    $("best").textContent =
+      bestTime.toFixed(1) + " 초";
   }
 
   function clearTimers() {
@@ -730,10 +758,10 @@ footer {
   }
 
   function stopEffect() {
-    effectTimers.forEach(clearTimeout);
-    effectTimers = [];
-
-    game.style.transform = "translateX(0)";
+    if (screenShake) {
+      screenShake.cancel();
+      screenShake = null;
+    }
   }
 
   function updateEffect() {
@@ -759,7 +787,10 @@ footer {
     }
   });
 
-  pauseBtn.addEventListener("click", togglePause);
+  pauseBtn.addEventListener(
+    "click",
+    togglePause
+  );
 
   effectBtn.addEventListener("click", () => {
     effectEnabled = !effectEnabled;
@@ -773,7 +804,10 @@ footer {
 
     playerX = Math.max(
       0,
-      Math.min(560, playerX + direction * 25)
+      Math.min(
+        560,
+        playerX + direction * 25
+      )
     );
 
     player.style.left = playerX + "px";
@@ -822,11 +856,17 @@ footer {
       return;
     }
 
-    if (key === "arrowleft" || key === "a") {
+    if (
+      key === "arrowleft" ||
+      key === "a"
+    ) {
       movePlayer(-1);
     }
 
-    if (key === "arrowright" || key === "d") {
+    if (
+      key === "arrowright" ||
+      key === "d"
+    ) {
       movePlayer(1);
     }
   });
@@ -875,8 +915,15 @@ footer {
       SPAWN_INTERVAL
     );
 
-    moveTimer = setInterval(moveObstacles, 20);
-    gameTimer = setInterval(updateTime, 100);
+    moveTimer = setInterval(
+      moveObstacles,
+      20
+    );
+
+    gameTimer = setInterval(
+      updateTime,
+      100
+    );
   }
 
   function elapsedTime() {
@@ -899,7 +946,9 @@ footer {
       "남은 시간: " +
       Math.max(
         0,
-        Math.ceil((GAME_TIME - elapsed) / 1000)
+        Math.ceil(
+          (GAME_TIME - elapsed) / 1000
+        )
       ) +
       "초";
 
@@ -907,13 +956,15 @@ footer {
       Math.max(
         0,
         (GAME_TIME - elapsed) / 1000
-      ).toFixed(1) + " SEC";
+      ).toFixed(1) +
+      " SEC";
 
     $("progress").style.width =
       Math.min(
         100,
         (elapsed / GAME_TIME) * 100
-      ) + "%";
+      ) +
+      "%";
 
     if (elapsed >= GAME_TIME) {
       winGame();
@@ -961,11 +1012,14 @@ footer {
       return;
     }
 
-    const obstacle = document.createElement("div");
+    const obstacle =
+      document.createElement("div");
 
     obstacle.className = "obstacle";
 
-    const x = Math.floor(Math.random() * 560);
+    const x = Math.floor(
+      Math.random() * 560
+    );
 
     obstacle.style.left = x + "px";
     obstacle.style.top = "0px";
@@ -1040,7 +1094,10 @@ footer {
 
     const survivalTime = won
       ? 30
-      : Math.min(30, elapsedTime() / 1000);
+      : Math.min(
+          30,
+          elapsedTime() / 1000
+        );
 
     saveBestTime(survivalTime);
 
@@ -1057,10 +1114,12 @@ footer {
       : "GAME OVER";
 
     $("timeDisplay").textContent =
-      (30 - survivalTime).toFixed(1) + " SEC";
+      (30 - survivalTime).toFixed(1) +
+      " SEC";
 
     $("progress").style.width =
-      (survivalTime / 30) * 100 + "%";
+      (survivalTime / 30) * 100 +
+      "%";
 
     status.textContent =
       (
@@ -1069,7 +1128,8 @@ footer {
           : "💥 실패! " +
             survivalTime.toFixed(1) +
             "초 생존!"
-      ) + " / R로 다시 시작";
+      ) +
+      " / R로 다시 시작";
 
     showOverlay(
       won
@@ -1085,16 +1145,54 @@ footer {
     );
 
     if (!won && effectEnabled) {
-      game.style.transform = "translateX(-15px)";
+      stopEffect();
 
-      [15, -15, 15, 0].forEach((x, i) => {
-        const timer = setTimeout(() => {
-          game.style.transform =
-            "translateX(" + x + "px)";
-        }, (i + 1) * 60);
+      screenShake = document.body.animate(
+        [
+          {
+            transform: "translate(0, 0)"
+          },
+          {
+            transform: "translate(-24px, 12px)"
+          },
+          {
+            transform: "translate(24px, -12px)"
+          },
+          {
+            transform: "translate(-21px, -10px)"
+          },
+          {
+            transform: "translate(20px, 10px)"
+          },
+          {
+            transform: "translate(-16px, 8px)"
+          },
+          {
+            transform: "translate(14px, -7px)"
+          },
+          {
+            transform: "translate(-10px, -5px)"
+          },
+          {
+            transform: "translate(8px, 4px)"
+          },
+          {
+            transform: "translate(-4px, -2px)"
+          },
+          {
+            transform: "translate(0, 0)"
+          }
+        ],
+        {
+          duration: 650,
+          easing: "linear",
+          iterations: 1
+        }
+      );
 
-        effectTimers.push(timer);
-      });
+      screenShake.onfinish = () => {
+        screenShake = null;
+      };
     }
   }
 
@@ -1126,7 +1224,8 @@ footer {
   );
 
   function resizeGame() {
-    const scale = $("viewport").clientWidth / 600;
+    const scale =
+      $("viewport").clientWidth / 600;
 
     $("scaled").style.transform =
       "scale(" + scale + ")";
@@ -1135,7 +1234,10 @@ footer {
       400 * scale + "px";
   }
 
-  window.addEventListener("resize", resizeGame);
+  window.addEventListener(
+    "resize",
+    resizeGame
+  );
 
   resizeGame();
   updateEffect();
@@ -1169,7 +1271,9 @@ footer {
               Array.isArray(input) ||
               Object.keys(input).length
             ) {
-              throw Error("Expected an empty object");
+              throw Error(
+                "Expected an empty object"
+              );
             }
 
             return {
