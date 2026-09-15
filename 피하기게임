@@ -1,0 +1,315 @@
+const player = document.getElementById("player");
+const game = document.getElementById("game");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const status = document.getElementById("status");
+const effectBtn = document.getElementById("effectBtn");
+
+let effectEnabled = true;
+
+let playerX = 280;
+let obstacles = [];
+
+let gameRunning = false;
+let paused = false;
+
+let gameStartTime = 0;
+let pausedTime = 0;
+let pauseStartedAt = 0;
+
+let gameTimer = null;
+let spawnTimer = null;
+let moveTimer = null;
+
+const GAME_TIME = 30000;
+
+// 난이도
+// 숫자가 작을수록 장애물이 더 자주 나옴
+const SPAWN_INTERVAL = 900;
+
+// 최고 기록 저장
+const BEST_TIME_KEY = "avoid30_best_time";
+
+let bestTime = loadBestTime();
+
+function loadBestTime() {
+    try {
+        const saved = localStorage.getItem(BEST_TIME_KEY);
+
+        if (saved === null) {
+            return 0;
+        }
+
+        const value = Number(saved);
+
+        if (!Number.isFinite(value) || value < 0) {
+            return 0;
+        }
+
+        return value;
+    } catch (error) {
+        return 0;
+    }
+}
+
+function saveBestTime(time) {
+    try {
+        if (time > bestTime) {
+            bestTime = time;
+            localStorage.setItem(BEST_TIME_KEY, String(bestTime));
+        }
+    } catch (error) {
+        console.log("기록 저장 실패");
+    }
+}
+
+startBtn.addEventListener("click", startGame);
+pauseBtn.addEventListener("click", togglePause);
+
+effectBtn.addEventListener("click", function() {
+    effectEnabled = !effectEnabled;
+
+    if (effectEnabled) {
+        effectBtn.textContent = "효과 ON";
+    } else {
+        effectBtn.textContent = "효과 OFF";
+    }
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.key.toLowerCase() === "r") {
+        startGame();
+        return;
+    }
+
+    if (event.key.toLowerCase() === "p") {
+        togglePause();
+        return;
+    }
+
+    if (!gameRunning || paused) return;
+
+    if (
+        event.key === "ArrowLeft" ||
+        event.key.toLowerCase() === "a"
+    ) {
+        playerX -= 25;
+    }
+
+    if (
+        event.key === "ArrowRight" ||
+        event.key.toLowerCase() === "d"
+    ) {
+        playerX += 25;
+    }
+
+    if (playerX < 0) {
+        playerX = 0;
+    }
+
+    if (playerX > 560) {
+        playerX = 560;
+    }
+
+    player.style.left = playerX + "px";
+});
+
+function startGame() {
+    clearInterval(gameTimer);
+    clearInterval(spawnTimer);
+    clearInterval(moveTimer);
+
+    obstacles.forEach(function(obstacle) {
+        obstacle.element.remove();
+    });
+
+    obstacles = [];
+
+    playerX = 280;
+    player.style.left = playerX + "px";
+
+    gameRunning = true;
+    paused = false;
+
+    gameStartTime = Date.now();
+    pausedTime = 0;
+
+    pauseBtn.textContent = "일시정지";
+
+    status.textContent =
+        "게임 중! 빨간 장애물을 피하세요!";
+
+    spawnTimer = setInterval(createObstacle, SPAWN_INTERVAL);
+    moveTimer = setInterval(moveObstacles, 20);
+    gameTimer = setInterval(updateTime, 100);
+}
+
+function updateTime() {
+    if (!gameRunning || paused) {
+        return;
+    }
+
+    const elapsed =
+        Date.now() - gameStartTime - pausedTime;
+
+    const remaining =
+        Math.ceil((GAME_TIME - elapsed) / 1000);
+
+    status.textContent =
+        "남은 시간: " + Math.max(0, remaining) + "초";
+
+    if (elapsed >= GAME_TIME) {
+        winGame();
+    }
+}
+
+function togglePause() {
+    if (!gameRunning) {
+        return;
+    }
+
+    if (!paused) {
+        paused = true;
+        pauseStartedAt = Date.now();
+
+        pauseBtn.textContent = "계속하기";
+        status.textContent = "⏸ 일시정지 중";
+    } else {
+        paused = false;
+
+        pausedTime += Date.now() - pauseStartedAt;
+
+        pauseBtn.textContent = "일시정지";
+        status.textContent = "게임 계속!";
+    }
+}
+
+function createObstacle() {
+    if (!gameRunning || paused) {
+        return;
+    }
+
+    const obstacle = document.createElement("div");
+    obstacle.className = "obstacle";
+
+    const x = Math.floor(Math.random() * 560);
+
+    obstacle.style.left = x + "px";
+    obstacle.style.top = "0px";
+
+    game.appendChild(obstacle);
+
+    obstacles.push({
+        element: obstacle,
+        x: x,
+        y: 0
+    });
+}
+
+function moveObstacles() {
+    if (!gameRunning || paused) {
+        return;
+    }
+
+    for (
+        let i = obstacles.length - 1;
+        i >= 0;
+        i--
+    ) {
+        const obstacle = obstacles[i];
+
+        obstacle.y += 4;
+        obstacle.element.style.top = obstacle.y + "px";
+
+        if (checkCollision(obstacle)) {
+            loseGame();
+            return;
+        }
+
+        if (obstacle.y > 400) {
+            obstacle.element.remove();
+            obstacles.splice(i, 1);
+        }
+    }
+}
+
+function checkCollision(obstacle) {
+    const playerLeft = playerX;
+    const playerRight = playerX + 40;
+
+    const playerTop = 340;
+    const playerBottom = 380;
+
+    const obstacleLeft = obstacle.x;
+    const obstacleRight = obstacle.x + 40;
+
+    const obstacleTop = obstacle.y;
+    const obstacleBottom = obstacle.y + 40;
+
+    return (
+        playerLeft < obstacleRight &&
+        playerRight > obstacleLeft &&
+        playerTop < obstacleBottom &&
+        playerBottom > obstacleTop
+    );
+}
+
+function winGame() {
+    const survivalTime =
+        (Date.now() - gameStartTime - pausedTime) / 1000;
+
+    saveBestTime(survivalTime);
+
+    gameRunning = false;
+    paused = false;
+
+    clearInterval(gameTimer);
+    clearInterval(spawnTimer);
+    clearInterval(moveTimer);
+
+    status.textContent =
+        "🎉 성공! 30초 생존! 최고 기록: " +
+        bestTime.toFixed(1) +
+        "초 / R로 다시 시작";
+}
+
+function loseGame() {
+    const survivalTime =
+        (Date.now() - gameStartTime - pausedTime) / 1000;
+
+    saveBestTime(survivalTime);
+
+    gameRunning = false;
+    paused = false;
+
+    clearInterval(gameTimer);
+    clearInterval(spawnTimer);
+    clearInterval(moveTimer);
+
+    if (effectEnabled) {
+        game.style.transform = "translateX(-15px)";
+
+        setTimeout(function() {
+            game.style.transform = "translateX(15px)";
+        }, 60);
+
+        setTimeout(function() {
+            game.style.transform = "translateX(-15px)";
+        }, 120);
+
+        setTimeout(function() {
+            game.style.transform = "translateX(15px)";
+        }, 180);
+
+        setTimeout(function() {
+            game.style.transform = "translateX(0)";
+        }, 240);
+    }
+
+    status.textContent =
+        "💥 실패! " +
+        survivalTime.toFixed(1) +
+        "초 생존! 최고 기록: " +
+        bestTime.toFixed(1) +
+        "초 / R로 다시 시작";
+}
